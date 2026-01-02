@@ -1,0 +1,51 @@
+Temp
+————————————————————————————————————————————————
+minimize L(beta, alpha) = sum from t = 1 to n (HYPO_t - (beta*SPY_t + alpha))^2 —> dL/dalpha = 0 = sum from t=1 to n of 2 * (HYPO_t - beta*SPY_t - alpha) * (-1)
+= sum from t = 1 to n of 2 * (-epsilon_t) = 0 —> sum of epsilons = 0
+
+minimize L(beta, alpha) = sum from t = 1 to n (HYPO_t - (beta*SPY_t + alpha))^2 —> dL/dbeta = 0 = sum from t=1 to n of 2 * (HYPO_t - beta*SPY_t - alpha) * (-SPY_t)
+= sum from t = 1 to n of 2 * (-epsilon_t*SPY_t) = 0 —> sum of epsilon_t times SPY_t = 0
+
+Cov(X, Y) = E[(X - X_mu) * (Y - Y_mu)] = E[X * Y] - (E[X] * E[Y])
+—> Cov(alpha + epsilon, SPY) = E[(alpha + epsilon) * SPY] - E[(alpha + epsilon)] * E[SPY] = E[SPY \times alpha)] + E[(SPY*epsilon)]  - E[alpha]*E[SPY]
+—> alpha*E[SPY] + 0 - alpha * E[SPY] = 0
+
+HYPO = (beta * SPY) + (alpha + epsilon)
+————————————————————————————————————————————————
+E[X_1 + X_2 + X_3 + … + X_252] = 252*E[X_1]
+Var(X_1 + X_2 + X_3 + … + X_252) = 252*Var(X_1) —> std dev = sqrt(252 * Var(X_1)) = sqrt(252) * Var(X_1)
+E/Var = (252*E[X_1])/(sqrt(252) * sigma(X_1)) = sqrt(252) * (E[X_1]/sigma(X_1))
+…
+————————————————————————————————————————————————
+Var(x/sig_x + y/sig_y) = Var(x/sig_x) + Var(y/sig_y) + 2Cov(x/sig_x, y/sig_y) = 2 + 2Cov(x, y)/(sig_x * sig_y)
+
+Var(x/sig_x + y/sig_y) = 2 + 2Cov(x, y)/(sig_x * sig_y)
+Cov(x, y)/(sig_x * sig_y) = Corr(x, y) = (Var(x/sig_x + y/sig_y) - 2) / 2
+Var(x/sig_x + y/sig_y) >= 0 —> (Var(x/sig_x + y/sig_y) - 2) / 2 >= -1
+
+
+Var(x/sig_x - y/sig_y) = Var(x/sig_x) + Var(-y/sig_y) + 2Cov(x/sig_x, -y/sig_y) = 2 - 2Cov(x, y)/(sig_x * sig_y)
+				      = 2 - 2Corr(x, y)
+Corr(x, y) = (2 - Var(x/sig_x - y/sig_y))/2
+Var(x/sig_x - y/sig_y) >= 0 —> Corr(x, y) <= (2 - 0) / 2 = 1
+
+assuming all X_i s are i.i.d.,
+Var(X_1 + X_2 + X_3 + … X_252) = Var(X_1) + Var(X_2) + Var(X_3) + … + Var(X_252) = 252 * Var(X_i)
+sig_X_annualized = sqrt(252) * sig_X
+
+a * a * Var(X_1) + b * a * Cov(X_1, X_2) + c * a *Cov(X_1, X_3) + … + z * a * Cov(X_1, X_n)
+a * Cov(X_2, X_1) + b * Var(X_2) + c * Cov(X_2, X_3) + … + z * Cov(X_2, X_n)
+a * Cov(X_3, X_1) + b * Cov(X_3, X_2) + c * Var(X_2) + … + z * Cov(X_3, X_n)
+
+—> Var(aX_1 + bX_2 + cX_3 + … zX_n) —> >= 0
+Positive semi-definite (PSD)
+
+Proving that correlation matrix is PSD —> observe that it’s the exact same thing as Var(aX_1 + bX_2 + cX_3 + … zX_n), except that each of the terms have
+sig_i * sig_j in the denominator
+——
+minimize sum of (y - (ax + b))^2 —> a = 1, b = 3
+minimize sum of (y - (a(2x) + b))^2 —> (y - (cx + b))^2 —> c =  1, b = 3; c =  2a —> a =c/2 = 1/2
+——
+just doubling the loss (minimize 2L also minimizes L) 
+
+————————————————————————————————————————————————
