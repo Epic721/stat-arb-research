@@ -25,6 +25,7 @@ Run `analysis.ipynb` - this is the main notebook that loads data, generates sign
 1. **Time-Series Momentum** - trend following on individual assets
 2. **Cross-Sectional Momentum** - relative strength ranking
 3. **Mean Reversion** - z-score reversal to moving average
+4. **Correlation-Based Pairs Trading** *(in progress)* - residual reversion against correlated baskets
 
 Signals are combined and weighted using Markowitz optimization.
 
