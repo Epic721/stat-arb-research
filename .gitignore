@@ -1,0 +1,17 @@
+# Mac System files
+.DS_Store
+
+# Python cache (compiled bytecode)
+__pycache__/
+*.pyc
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# venv envs (or conda envs)
+venv/
+env/
+.env
+
+# Data folders (usually too large)
+# data/ --> 2.3 MB for me as of now
