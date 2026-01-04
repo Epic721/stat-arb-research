@@ -46,7 +46,7 @@ def general_weights(sigma, mu, shrinkage=0.1):
     mu: expected returns / signal vector
     shrinkage: regularization amount
     
-    Returns normalized weights (abs sum = 1)
+    Returns normalized weights (abs sum = 1, sum = 0 for dollar neutral)
     """
     #! working in strategy space, so historical data to estimate covariance matrix is roughly sufficient
     if isinstance(sigma, pd.DataFrame):
@@ -65,8 +65,11 @@ def general_weights(sigma, mu, shrinkage=0.1):
     
     raw_weights = sigma_inv @ mu
     
+    #!!!!! demean to enforce dollar neutrality (Sigma^-1 * mu doesn't preserve sum=0)
+    demeaned = raw_weights - raw_weights.mean()
+    
     # normalize so |w|.sum() = 1
-    normalized = raw_weights / np.abs(raw_weights).sum()
+    normalized = demeaned / np.abs(demeaned).sum()
     
     return normalized
 
@@ -94,7 +97,7 @@ def vol_target_scalar(weights, sigma, target_vol=0.15, annualize_factor=np.sqrt(
     return scalar
 
 
-def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_vol=0.20):
+def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_vol=0.20, max_leverage=3.0): #! can perhaps add another parameter to explicitlytoggle vol targeting
     """
     Main function: compute rolling optimal weights.
     
@@ -132,8 +135,8 @@ def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_v
         w = general_weights(sigma, mu, shrinkage)
         
         # apply vol target
-        #! basically adjusting leverage (lever up) to hit target volatility
-        scalar = vol_target_scalar(w, sigma, target_vol)
+        #! basically adjusting leverage (lever up) or just general level of exposure to hit (annualized) target volatility
+        scalar = min(vol_target_scalar(w, sigma, target_vol), max_leverage)
         w_scaled = w * scalar
         
         weights_list.append(pd.Series(w_scaled, index=ret.columns, name=dt))
