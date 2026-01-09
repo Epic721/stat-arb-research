@@ -97,7 +97,8 @@ def vol_target_scalar(weights, sigma, target_vol=0.15, annualize_factor=np.sqrt(
     return scalar
 
 
-def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_vol=0.20, max_leverage=3.0): #! can perhaps add another parameter to explicitlytoggle vol targeting
+def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_vol=0.20, 
+                            max_leverage=3.0, weight_smooth=0.05):
     """
     Main function: compute rolling optimal weights.
     
@@ -106,6 +107,9 @@ def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_v
     cov_window: hours for rolling cov (720 = 30 days)
     shrinkage: cov matrix regularization
     target_vol: annualized vol target
+    max_leverage: cap on gross exposure
+    weight_smooth: EMA smoothing factor (0.05 = slow decay, 1.0 = no smoothing)
+                   w_new = smooth * w_computed + (1 - smooth) * w_previous
     
     Returns: DataFrame of position weights
     """
@@ -115,6 +119,7 @@ def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_v
     signal = signal.loc[common_idx]
     
     weights_list = []
+    prev_weights = None
     
     for i in range(cov_window, len(ret)):
         dt = ret.index[i]
@@ -129,17 +134,24 @@ def compute_optimal_weights(ret, signal, cov_window=720, shrinkage=0.1, target_v
         # skip if signal has NaNs
         if mu.isna().any():
             weights_list.append(pd.Series(0, index=ret.columns, name=dt))
+            prev_weights = None
             continue
         
-        # compute weights
+        # compute raw optimal weights
         w = general_weights(sigma, mu, shrinkage)
         
         # apply vol target
-        #! basically adjusting leverage (lever up) or just general level of exposure to hit (annualized) target volatility
         scalar = min(vol_target_scalar(w, sigma, target_vol), max_leverage)
         w_scaled = w * scalar
         
-        weights_list.append(pd.Series(w_scaled, index=ret.columns, name=dt))
+        # apply EMA smoothing to reduce turnover
+        if prev_weights is not None and weight_smooth < 1.0:
+            w_smoothed = weight_smooth * w_scaled + (1 - weight_smooth) * prev_weights
+        else:
+            w_smoothed = w_scaled
+        
+        prev_weights = w_smoothed
+        weights_list.append(pd.Series(w_smoothed, index=ret.columns, name=dt))
     
     weights_df = pd.DataFrame(weights_list)
     return weights_df

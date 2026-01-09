@@ -74,6 +74,14 @@ def normalize_signal(signal):
     return normalized
 
 
+def smooth_signal(signal, halflife=24):
+    """
+    Apply exponential smoothing to signal to reduce noise and turnover.
+    halflife: number of periods for signal to decay by half (in hours)
+    """
+    return signal.ewm(halflife=halflife, adjust=False).mean()
+
+
 def combine_signals(signals, weights=None):
     """
     Combine multiple signal DataFrames into one.
@@ -93,24 +101,33 @@ def combine_signals(signals, weights=None):
     return combined
 
 
-def compute_all_signals(px, ret, params=None):
+def compute_all_signals(px, ret, params=None, signal_smooth_halflife=48):
     """
     Convenience function to compute all signals at once.
     
     params: dict with lookbacks for each signal
+    signal_smooth_halflife: EMA halflife for signal smoothing (hours), 0 to disable
     Returns: dict of signal DataFrames
     """
     if params is None:
+        # longer lookbacks = slower-moving signals = less turnover
         params = {
-            'tsmom_lb': 168, # 7 days = 168 hours
-            'xsmom_lb': 72, # 3 days
-            'meanrev_lb': 24, # 1 day
+            'tsmom_lb': 336,   # 14 days (was 7)
+            'xsmom_lb': 168,   # 7 days (was 3)
+            'meanrev_lb': 48,  # 2 days (was 1)
         }
     
     signals = {}
     signals['tsmom'] = normalize_signal(tsmom(px, params['tsmom_lb']))
     signals['xsmom'] = normalize_signal(xsmom(ret, params['xsmom_lb']))
     signals['meanrev'] = normalize_signal(mean_reversion(px, params['meanrev_lb']))
+    
+    # apply smoothing to reduce signal noise
+    if signal_smooth_halflife > 0:
+        for name in signals:
+            signals[name] = smooth_signal(signals[name], halflife=signal_smooth_halflife)
+            # re-normalize after smoothing
+            signals[name] = normalize_signal(signals[name])
     
     return signals
 
