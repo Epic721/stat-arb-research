@@ -22,10 +22,11 @@ Run `analysis.ipynb` - this is the main notebook that loads data, generates sign
 
 ## Strategies
 
-1. **Time-Series Momentum** - trend following on individual assets
-2. **Cross-Sectional Momentum** - relative strength ranking
-3. **Mean Reversion** - z-score reversal to moving average
-4. **Correlation-Based Pairs Trading** *(in progress)* - residual reversion against correlated baskets
+1. **Time-Series Momentum (TSMOM)** - trend following on individual assets
+2. **Cross-Sectional Momentum (XSMOM)** - relative strength ranking
+3. **Volatility-Adjusted Momentum** - risk-adjusted (Sharpe-like) momentum
+4. **Short-Term Reversal** - overnight reversal effect
+5. **Correlation-Based Pairs Trading** *(in progress)* - residual reversion against correlated baskets
 
-Signals are combined and weighted using Markowitz optimization.
+Signals are combined (85% momentum, 15% reversal) and weighted using Markowitz optimization with volatility targeting.
 

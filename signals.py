@@ -63,6 +63,38 @@ def mean_reversion(px, lookback=24):
     return signal
 
 
+def short_term_reversal(ret, lookback=24):
+    """
+    Short-term reversal (overnight effect).
+    Bet against recent winners on very short timeframes.
+    
+    This is different from long-term mean reversion - it captures
+    the well-documented short-term reversal effect.
+    """
+    # recent cumulative return
+    cum_ret = ret.rolling(lookback, min_periods=1).sum()
+    # bet against it
+    signal = -1 * cum_ret
+    return signal
+
+
+def vol_adjusted_momentum(ret, lookback=168, vol_lookback=72):
+    """
+    Volatility-adjusted momentum (Sharpe-like signal).
+    
+    Ranks assets by their risk-adjusted returns rather than raw returns.
+    Assets with high return AND low volatility get stronger signals.
+    """
+    # rolling return
+    cum_ret = ret.rolling(lookback, min_periods=1).sum()
+    # rolling volatility
+    vol = ret.rolling(vol_lookback, min_periods=1).std()
+    # sharpe-like ratio (avoid div by zero)
+    vol = vol.replace(0, np.nan)
+    risk_adj_ret = cum_ret / vol
+    return risk_adj_ret.fillna(0)
+
+
 def normalize_signal(signal):
     """
     Cross-sectionally demean (sum(weights) = 0) and scale to sum(|weights|) = 1
